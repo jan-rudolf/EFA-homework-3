@@ -1,61 +1,42 @@
 #include <iostream>
 
+#if !__PROGTEST__
+
 class NotFoundException {
 public:
 	NotFoundException() {}
-
-	friend ostream& operator<<(ostream& os, const NotFoundException& e ) {
-		os << "Value not found";
-		
-		return os;
-	}
+	friend std::ostream& operator<<(std::ostream& os, const NotFoundException& e ) { os << "Value not found"; return os; }
 };
 
 class CValue {
 public:    
 	CValue();     
-
 	CValue(const CValue &i);
-
 	~CValue();
-
 	CValue& operator = ( const CValue &i );       
-
 	bool operator == ( const CValue &i ) const;
-
 	bool operator != ( const CValue &i ) const;
-
 	bool operator < ( const CValue &i ) const;
-
 	bool operator > ( const CValue &i ) const;
-
 	bool operator >= ( const CValue &i ) const;
-
 	bool operator <= ( const CValue &i ) const;
 };
 
 class CKey {
 public:
 	CKey();     
-
 	CKey(const CKey &i);
-    
     ~CKey();
-   
    	CKey& operator = ( const CKey &i );       
-    
     bool operator == ( const CKey &i ) const;
-      
     bool operator != ( const CKey &i ) const;
-      
     bool operator < ( const CKey &i ) const;
-     
     bool operator > ( const CKey &i ) const;
-    
    	bool operator >= ( const CKey &i ) const;
-    
     bool operator <= ( const CKey &i ) const;
 };
+
+#endif
 
 class CNode {
 	CValue m_value;
@@ -99,9 +80,25 @@ class CTable {
 public:
 	CTable(); 
 
-	bool insert(const CKey& key, const CValue& val);
+	bool insert(const CKey& key, const CValue& val) {
+		CNode* actual_node = m_root;
 
-	bool remove(const CKey& key);
+		while(actual_node != NULL) {
+			if (actual_node->getKey() < key) {
+				actual_node = actual_node->getLeft();
+			} else {
+				actual_node = actual_node->getRight();
+			}
+		}
+
+		CNode* new_node = new CNode();
+
+		return true;
+	}
+
+	bool remove(const CKey& key) {
+		return true;
+	}
 
 	CValue search(const CKey& key) const {
 		CNode* actual_node = m_root;
@@ -112,20 +109,27 @@ public:
 			}
 
 			if (actual_node->getKey() < key) {
-				actual_node = actual_node->getRight();
+				actual_node = actual_node->getLeft();
 			} else {
 				actual_node = actual_node->getRight();
 			}
 		}
 
-		return actual_node->getValue();
+
+		if (actual_node == NULL) {
+			throw NotFoundException();
+		} else {
+			return actual_node->getValue();
+		}
 	}
 
 	bool isElem(const CKey& key) const {
-		CValue tmp_value = this->search(key);
-
-		if (tmp_value == NULL)
+		try {
+			CValue tmp_value = this->search(key);
+		}
+		catch (...) {
 			return false;
+		}
 
 		return true;
 	}
