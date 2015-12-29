@@ -9,31 +9,74 @@ public:
 };
 
 class CValue {
-public:    
-	CValue();     
-	CValue(const CValue &i);
-	~CValue();
+	int m_value;
+public:   
+	CValue() {
+		m_value = 0;
+	} 
+	CValue(int value) {
+		m_value = value;
+	}     
+	CValue(const CValue &i) {
+		m_value = i.m_value;
+	}
+	~CValue() {
+	}
 	CValue& operator = ( const CValue &i );       
-	bool operator == ( const CValue &i ) const;
-	bool operator != ( const CValue &i ) const;
-	bool operator < ( const CValue &i ) const;
-	bool operator > ( const CValue &i ) const;
-	bool operator >= ( const CValue &i ) const;
-	bool operator <= ( const CValue &i ) const;
+	bool operator == ( const CValue &i ) const {
+    	return (i.m_value == this->m_value);
+    }
+	bool operator != ( const CValue &i ) const {
+    	return (i.m_value != this->m_value);
+    }
+	bool operator < ( const CValue &i ) const {
+    	return (i.m_value < this->m_value);
+    }
+	bool operator > ( const CValue &i ) const {
+    	return (i.m_value > this->m_value);
+    }
+	bool operator >= ( const CValue &i ) const {
+    	return (i.m_value >= this->m_value);
+    }
+	bool operator <= ( const CValue &i ) const {
+    	return (i.m_value <= this->m_value);
+    }
 };
 
 class CKey {
 public:
-	CKey();     
-	CKey(const CKey &i);
-    ~CKey();
-   	CKey& operator = ( const CKey &i );       
-    bool operator == ( const CKey &i ) const;
-    bool operator != ( const CKey &i ) const;
-    bool operator < ( const CKey &i ) const;
-    bool operator > ( const CKey &i ) const;
-   	bool operator >= ( const CKey &i ) const;
-    bool operator <= ( const CKey &i ) const;
+	int m_key;
+
+	CKey() {
+		m_key = 0;
+	};
+	CKey(int key) {
+		m_key = key;
+	}     
+	CKey(const CKey &i) {
+		m_key = i.m_key;
+	}
+    ~CKey() {
+    }
+   	CKey& operator = ( const CKey &i );    
+    bool operator == ( const CKey &i ) const {
+    	return (i.m_key == this->m_key);
+    }
+    bool operator != ( const CKey &i ) const {
+    	return (i.m_key != this->m_key);
+    }
+    bool operator < ( const CKey &i ) const {
+    	return (i.m_key < this->m_key);
+    }
+    bool operator > ( const CKey &i ) const {
+    	return (i.m_key > this->m_key);
+    }
+   	bool operator >= ( const CKey &i ) const {
+    	return (i.m_key >= this->m_key);
+    }
+    bool operator <= ( const CKey &i ) const {
+    	return (i.m_key <= this->m_key);
+    }
 };
 
 #endif
@@ -78,7 +121,9 @@ class CTable {
 	CNode* m_root;
 
 public:
-	CTable(); 
+	CTable() {
+		m_root = NULL;
+	}; 
 
 	bool insert(const CKey& key, const CValue& val) {
 		CNode* actual_node = m_root;
@@ -140,6 +185,20 @@ public:
 };
 
 int main () {
+
+	CKey key(5);
+
+	CTable* table = new CTable();
+	
+
+	if (table->isElem(key)) {
+		std::cout << "isElem TRUE" << std::endl;
+	} else {
+		std::cout << "isElem FALSE" << std::endl;
+	}
+
+
+
 
 	return 0;
 }
