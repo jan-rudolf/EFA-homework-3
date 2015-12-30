@@ -185,9 +185,11 @@ public:
 };
 
 class CTable {
-	CNode* m_root;
+	
 
 public:
+	CNode* m_root;
+
 	CTable() {
 		m_root = NULL;
 	}; 
@@ -200,28 +202,30 @@ public:
 		while(actual_node != NULL) {
 			prev_node = actual_node;
 
+			std::cout << actual_node->getKey().m_key << std::endl;
+
 			if (actual_node->getKey() < key) {
 				actual_node = actual_node->getLeft();
+				std::cout << "L" << std::endl;
 			} else {
 				actual_node = actual_node->getRight();
+				std::cout << "R" << std::endl;
 			}
 		}
 
-		CNode* new_node = new CNode(key, val);
-		new_node->setParent(prev_node);
-
-		x = new_node;
+		x = new CNode(key, val);
+		x->setParent(prev_node);
 
 		if (!prev_node) {
 			m_root = x;
 			std::cout << "vytvarim root" << std::endl;
 		} else {
-			if (prev_node->getKey() < new_node->getKey()) {
-				prev_node->setLeftChild(new_node);
+			if (prev_node->getKey() < x->getKey()) {
+				prev_node->setLeftChild(x);
 
 				std::cout << "vlozim do left" << std::endl;
 			} else {
-				prev_node->setRightChild(new_node);
+				prev_node->setRightChild(x);
 
 				std::cout << "vlozim do right" << std::endl;
 			}
@@ -239,7 +243,7 @@ public:
 					grandparent->setColorRed();
 
 					x = grandparent;
-				} else {
+				} else if (parent->getColor() == 'R' && grandparent->getColorRightChild() == 'B') {
 					if (x == parent->getRight()) { //right rotation on parent
 						this->rotateLeft(parent, x);
 
@@ -250,13 +254,10 @@ public:
 
 						this->rotateRight(grandparent, parent);
 
-						if (grandparent == m_root) {
-							m_root = parent;
-							printf("prenastavuju root\n");
-						}
-
 						x = parent;
 					} 
+				} else {
+					break;
 				}
 			} else if (x->getParent() == x->getParent()->getParent()->getRight()) { //pokud je rodic pravym potomkem sveho 
 				CNode* parent = x->getParent();
@@ -269,7 +270,7 @@ public:
 					grandparent->setColorRed();
 
 					x = grandparent;
-				} else {
+				} else if (parent->getColor() == 'R' && grandparent->getColorLeftChild() == 'B') {
 					if (x == parent->getLeft()) { //right rotation on parent
 						this->rotateRight(parent, x);
 
@@ -280,13 +281,10 @@ public:
 
 						this->rotateLeft(grandparent, parent);
 
-						if (grandparent == m_root) {
-							m_root = parent;
-							printf("prenastavuju root\n");
-						}
-
 						break;
 					} 
+				} else {
+					break;
 				}
 			}
 		} 
@@ -304,12 +302,19 @@ public:
 			} else {
 				x->getParent()->setLeftChild(y); 
 			}
-		}	
+		} else {
+			m_root = y;
+		}
 
 		y->setParent(x->getParent());
 		x->setParent(y);
 
 		x->setLeftChild(y->getRight());
+		
+		if (y->getRight()) {
+			y->getRight()->setParent(x);
+		}
+
 		y->setRightChild(x);
 
 		return;
@@ -323,12 +328,19 @@ public:
 			} else {
 				x->getParent()->setLeftChild(y); 
 			}
+		} else {
+			m_root = y;
 		}
 
 		y->setParent(x->getParent());
 		x->setParent(y);
 
 		x->setRightChild(y->getLeft());
+
+		if (y->getLeft()) {
+			y->getLeft()->setParent(x);
+		}
+
 		y->setLeftChild(x);
 
 		return;
@@ -342,7 +354,7 @@ public:
 		CNode* actual_node = m_root;
 
 		while (actual_node != NULL) {
-			printf("%d\n", actual_node->getKey().m_key);
+			printf("%d%c\n", actual_node->getKey().m_key, actual_node->getColor());
 
 			if (actual_node->getKey() == key) {
 				break;
@@ -381,18 +393,75 @@ public:
 
 int main () {
 
-	CKey key1(5), key2(85), key3(15);
+	CKey key1(10), key2(85), key3(15), key4(70), key5(20), key6(60), key7(30), key8(50), key9(65), key10(80), key11(90), key12(40), key13(5), key14(55);
 	CValue value(10);
 
 	CTable* table = new CTable();
+	std::cout << std::endl;
 	std::cout << "key1:" << std::endl;
 	table->insert(key1, value);
 	table->search(key1);
+
+	std::cout << std::endl;
 	std::cout << "key2:" << std::endl;
 	table->insert(key2, value);
 	table->search(key2);
+
+	std::cout << std::endl;
 	std::cout << "key3:" << std::endl;
 	table->insert(key3, value);
 	table->search(key3);
+
+
+	std::cout << std::endl;
+	std::cout << "key4:" << std::endl;
+	table->insert(key4, value);
+	table->search(key4);
+
+
+	std::cout << std::endl;
+	std::cout << "key5:" << std::endl;
+	table->insert(key5, value);
+	table->search(key5);
+
+	std::cout << std::endl;
+	std::cout << "key6:" << std::endl;
+	table->insert(key6, value);
+	table->search(key6);
+
+	std::cout << std::endl;
+	std::cout << "key7:" << std::endl;
+	table->insert(key7, value);
+	table->search(key7);
+
+	std::cout << std::endl;
+	std::cout << "key8:" << std::endl;
+	table->insert(key8, value);
+	table->search(key8);
+
+	std::cout << "key9:" << std::endl;
+	table->insert(key9, value);
+	table->search(key9);
+
+	std::cout << "key10:" << std::endl;
+	table->insert(key10, value);
+	table->search(key10);
+
+	std::cout << "key11:" << std::endl;
+	table->insert(key11, value);
+	table->search(key11);
+
+	std::cout << "key12:" << std::endl;
+	table->insert(key12, value);
+	table->search(key12);
+
+	std::cout << "key13:" << std::endl;
+	table->insert(key13, value);
+	table->search(key13);
+
+	std::cout << "key14:" << std::endl;
+	table->insert(key14, value);
+	table->search(key14);
+
 	return 0;
 }
