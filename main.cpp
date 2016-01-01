@@ -99,6 +99,8 @@ class CNode {
 	CNode* m_parent;
 	CNode* m_left;
 	CNode* m_right;
+
+	
 public:
 	CNode() {
 		m_valid = false;
@@ -193,10 +195,17 @@ class CTable {
 
 public:
 	CNode* m_root;
+	CNode* m_sentinel;
 
 	CTable() {
 		m_root = NULL;
+		m_sentinel = new CNode();
+		m_sentinel->setColorBlack();
 	}; 
+
+	~CTable() {
+		delete m_sentinel;
+	}
 
 	bool insert(const CKey& key, const CValue& val) {
 		CNode* actual_node = m_root;
@@ -358,6 +367,14 @@ public:
 		return x;
 	}
 
+	CNode* treeMaximum (CNode* x) {
+		while (x->getRight() != NULL){
+			x = x->getRight();
+		}
+
+		return x;
+	}
+
 	CNode* treeSuccessor(CNode* x) {
 		if (x->getRight() != NULL)
 			return this->treeMinimum(x->getRight());
@@ -365,6 +382,20 @@ public:
 		CNode* y = x->getParent();
 
 		while (y != NULL &&  x == y->getRight()) {
+			x = y;
+			y = y->getParent();
+		}
+
+		return y;
+	}
+
+	CNode* treePredecessor(CNode* x) {
+		if (x->getLeft() != NULL)
+			return this->treeMaximum(x->getLeft());
+
+		CNode* y = x->getParent();
+
+		while (y != NULL &&  x == y->getLeft()) {
 			x = y;
 			y = y->getParent();
 		}
@@ -392,7 +423,7 @@ public:
 		if (!node_to_delete->getLeft() || !node_to_delete->getRight()) {
 			y = node_to_delete;
 		} else {
-			y = this->treeSuccessor(node_to_delete);
+			y = this->treePredecessor(node_to_delete);
 		}
 
 		if (y->getLeft() != NULL)
@@ -400,8 +431,12 @@ public:
 		else
 			x = y->getRight();
 
-		if (x != NULL)
-			x->setParent(y);
+		if (x != NULL) {
+			x->setParent(y->getParent());
+		} else {
+			x = m_sentinel;
+			x->setParent(y->getParent());
+		}
 
 		if (y->getParent() == NULL)
 			this->m_root = x;
@@ -622,6 +657,16 @@ int main () {
 
 	std::cout << "del key11 = 90" << std::endl;
 	table->remove(key11);
+	//table->search(key11);
+
+
+	std::cout << "del key2 = 85" << std::endl;
+	table->remove(key2);
+	//table->search(key2);
+
+	std::cout << "del key7 = 30" << std::endl;
+	table->remove(key7);
+	table->search(key7);
 
 	return 0;
 }
