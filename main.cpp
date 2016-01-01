@@ -210,10 +210,10 @@ public:
 
 			if (actual_node->getKey() < key) {
 				actual_node = actual_node->getLeft();
-				std::cout << "L" << std::endl;
+				//std::cout << "L" << std::endl;
 			} else {
 				actual_node = actual_node->getRight();
-				std::cout << "R" << std::endl;
+				//std::cout << "R" << std::endl;
 			}
 		}
 
@@ -222,16 +222,16 @@ public:
 
 		if (!prev_node) {
 			m_root = x;
-			std::cout << "vytvarim root" << std::endl;
+			//std::cout << "vytvarim root" << std::endl;
 		} else {
 			if (prev_node->getKey() < x->getKey()) {
 				prev_node->setLeftChild(x);
 
-				std::cout << "vlozim do left" << std::endl;
+				//std::cout << "vlozim do left" << std::endl;
 			} else {
 				prev_node->setRightChild(x);
 
-				std::cout << "vlozim do right" << std::endl;
+				//std::cout << "vlozim do right" << std::endl;
 			}
 		}
 
@@ -299,7 +299,7 @@ public:
 	}
 
 	void rotateRight (CNode* x, CNode* y) {
-		printf("provadim R rotaci\n");
+		//printf("provadim R rotaci\n");
 		if (x->getParent()) {
 			if (x->getParent()->getRight() == x) {
 				x->getParent()->setRightChild(y); 
@@ -325,7 +325,7 @@ public:
 	}
 
 	void rotateLeft (CNode* x, CNode* y) {
-		printf("provadim L rotaci\n");
+		//printf("provadim L rotaci\n");
 		if (x->getParent()) {
 			if (x->getParent()->getRight() == x) {
 				x->getParent()->setRightChild(y); 
@@ -360,7 +360,7 @@ public:
 
 	CNode* treeSuccessor(CNode* x) {
 		if (x->getRight() != NULL)
-			return this->treeMinimum(x->getRight())
+			return this->treeMinimum(x->getRight());
 
 		CNode* y = x->getParent();
 
@@ -395,27 +395,113 @@ public:
 			y = this->treeSuccessor(node_to_delete);
 
 		if (y->getLeft() != NULL)
-			x = y->getLeft()
+			x = y->getLeft();
 		else
-			x = y->getRight()
+			x = y->getRight();
 
 		if (x != NULL)
 			x->setParent(y);
 
 		if (y->getParent() == NULL)
 			this->m_root = x;
-		else if (y = y->getParent()->getLeft()) {
+		else if (y == y->getParent()->getLeft()) {
 			y->getParent()->setLeftChild(x);
 		} else {
 			y->getParent()->setRightChild(x);
 		}
 
-		if (y != z) {
-			z->setKey(y->getKey());
+		if (y != node_to_delete) {
+			node_to_delete->setKey(y->getKey());
 			// copy other satellite data
 		}
 
+		if (y->getColor() == 'B')
+			this->deleteFixUp(x);
+
 		return true;
+	}
+
+	void deleteFixUp(CNode* x) {
+		while (x != m_root && x->getColor() == 'B') {
+			if (x == x->getParent()->getLeft()) {
+				/* x is left child of his parent */
+				CNode *w = x->getParent()->getRight(); //sibling of x;
+
+				if (w->getColor() == 'R') {
+					w->setColorBlack();
+					x->getParent()->setColorRed();
+
+					this->rotateLeft(w->getParent(), w);
+
+					w = x->getParent()->getRight();
+				}
+
+				if (w->getLeft()->getColor() == 'B' &&  w->getRight()->getColor() == 'B') {
+					w->setColorRed();
+
+					x = x->getParent();
+				} else if (w->getRight()->getColor() == 'B') {
+					w->getLeft()->setColorBlack();
+					w->setColorRed();
+
+					this->rotateRight(w, w->getLeft());
+
+					w = x->getParent()->getRight();
+				} else {
+					if (x->getParent()->getColor() == 'B')
+						w->setColorBlack();
+					else
+						w->setColorRed();
+
+					x->getParent()->setColorBlack();
+					w->getRight()->setColorBlack();
+
+					this->rotateLeft(x->getParent(), w);
+
+					x = m_root;
+				}
+
+			} else {
+				/* x is right child of his parent */
+				CNode *w = x->getParent()->getLeft(); //sibling of x;
+
+				if (w->getColor() == 'R') {
+					w->setColorBlack();
+					x->getParent()->setColorRed();
+
+					this->rotateRight(w->getParent(), w);
+
+					w = x->getParent()->getLeft();
+				}
+
+				if (w->getRight()->getColor() == 'B' &&  w->getLeft()->getColor() == 'B') {
+					w->setColorRed();
+
+					x = x->getParent();
+				} else if (w->getLeft()->getColor() == 'B') {
+					w->getRight()->setColorBlack();
+					w->setColorRed();
+
+					this->rotateLeft(w, w->getRight());
+
+					w = x->getParent()->getLeft();
+				} else {
+					if (x->getParent()->getColor() == 'B')
+						w->setColorBlack();
+					else
+						w->setColorRed();
+
+					x->getParent()->setColorBlack();
+					w->getLeft()->setColorBlack();
+
+					this->rotateRight(x->getParent(), w);
+
+					x = m_root;
+				}
+			}
+		}
+
+		x->setColorBlack();
 	}
 
 	CValue search(const CKey& key) const {
@@ -471,7 +557,7 @@ int main () {
 	table->search(key1);
 
 	std::cout << std::endl;
-	std::cout << "key2:" << std::endl;
+	std::cout << "key2:" << std::endl;
 	table->insert(key2, value);
 	table->search(key2);
 
