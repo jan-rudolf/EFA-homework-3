@@ -389,10 +389,11 @@ public:
 		if (node_to_delete == NULL)
 			return false;
 
-		if (node_to_delete->getLeft() || node_to_delete->getRight())
+		if (!node_to_delete->getLeft() || !node_to_delete->getRight()) {
 			y = node_to_delete;
-		else
+		} else {
 			y = this->treeSuccessor(node_to_delete);
+		}
 
 		if (y->getLeft() != NULL)
 			x = y->getLeft();
@@ -616,6 +617,11 @@ int main () {
 	std::cout << "key14:" << std::endl;
 	table->insert(key14, value);
 	table->search(key14);
+
+	std::cout << std::endl;
+
+	std::cout << "del key11 = 90" << std::endl;
+	table->remove(key11);
 
 	return 0;
 }
