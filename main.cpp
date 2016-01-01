@@ -115,6 +115,10 @@ public:
 		m_value = value;
 	}
 
+	void setKey(const CKey &key) {
+		m_key = key;
+	}
+
 	void setParent (CNode* parent) {
 		m_parent = parent;
 
@@ -346,7 +350,71 @@ public:
 		return;
 	}
 
+	CNode* treeMinimum (CNode* x) {
+		while (x->getLeft() != NULL){
+			x = x->getLeft();
+		}
+
+		return x;
+	}
+
+	CNode* treeSuccessor(CNode* x) {
+		if (x->getRight() != NULL)
+			return this->treeMinimum(x->getRight())
+
+		CNode* y = x->getParent();
+
+		while (y != NULL &&  x == y->getRight()) {
+			x = y;
+			y = y->getParent();
+		}
+
+		return y;
+	}
+
 	bool remove(const CKey& key) {
+		CNode *node_to_delete = m_root;
+		CNode *y = NULL, *x = NULL;
+
+		while (node_to_delete != NULL) {
+			if (node_to_delete->getKey() == key)
+				break;
+
+			if (node_to_delete->getKey() < key)
+				node_to_delete = node_to_delete->getLeft();
+			else
+				node_to_delete = node_to_delete->getRight();
+		}
+
+		if (node_to_delete == NULL)
+			return false;
+
+		if (node_to_delete->getLeft() || node_to_delete->getRight())
+			y = node_to_delete;
+		else
+			y = this->treeSuccessor(node_to_delete);
+
+		if (y->getLeft() != NULL)
+			x = y->getLeft()
+		else
+			x = y->getRight()
+
+		if (x != NULL)
+			x->setParent(y);
+
+		if (y->getParent() == NULL)
+			this->m_root = x;
+		else if (y = y->getParent()->getLeft()) {
+			y->getParent()->setLeftChild(x);
+		} else {
+			y->getParent()->setRightChild(x);
+		}
+
+		if (y != z) {
+			z->setKey(y->getKey());
+			// copy other satellite data
+		}
+
 		return true;
 	}
 
