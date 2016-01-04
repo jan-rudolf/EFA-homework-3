@@ -88,14 +88,10 @@ public:
 #endif
 
 class CNode {
-	bool m_valid;
-
-	CValue m_value;
-
-	CKey m_key;
-
+	bool m_is_sentinel;
 	char m_color;
-
+	CValue m_value;
+	CKey m_key;
 	CNode* m_parent;
 	CNode* m_left;
 	CNode* m_right;
@@ -103,7 +99,7 @@ class CNode {
 	
 public:
 	CNode() {
-		m_valid = false;
+		m_is_sentinel = false;
 		m_color = 'R';
 		m_parent = NULL;
 		m_left = NULL;
@@ -111,10 +107,26 @@ public:
 	}
 
 	CNode(const CKey &key, const CValue &value) {
-		m_valid = true;
+		m_is_sentinel = false;
 		m_color = 'R';
 		m_key = key;
 		m_value = value;
+
+		m_left = new CNode();
+		m_left->setSentinel();
+		m_right = new CNode();
+		m_right->setSentinel();
+	}
+
+	void setSentinel() {
+		m_is_sentinel = true;
+		m_color = 'B';
+		m_left = NULL;
+		m_right = NULL;
+	}
+
+	bool isSentinel() {
+		return m_is_sentinel;
 	}
 
 	void setKey(const CKey &key) {
@@ -175,16 +187,7 @@ public:
 
 	CNode* getLeft() const {
 		return m_left;
-	}  
-
-	CNode* getRight_remove() const {
-		
-		return m_right;
 	}
-
-	CNode* getLeft_remove() const {
-		return m_left;
-	}  
 
 	CNode* getRight() const {
 		return m_right;
@@ -204,16 +207,15 @@ class CTable {
 
 public:
 	CNode* m_root;
-	CNode* m_sentinel;
 
 	CTable() {
-		m_root = NULL;
-		m_sentinel = new CNode();
-		m_sentinel->setColorBlack();
+		m_root = new CNode();
+		m_root->setSentinel();
+		//m_sentinel = new CNode();
+		//m_sentinel->setColorBlack();
 	}; 
 
 	~CTable() {
-		delete m_sentinel;
 	}
 
 	bool insert(const CKey& key, const CValue& val) {
@@ -221,7 +223,7 @@ public:
 		CNode* prev_node = NULL;
 		CNode* x = NULL;
 
-		while(actual_node != NULL) {
+		while(!actual_node->isSentinel()) {
 			prev_node = actual_node;
 
 			std::cout << actual_node->getKey().m_key << std::endl;
@@ -369,7 +371,7 @@ public:
 	}
 
 	CNode* treeMinimum (CNode* x) {
-		while (x->getLeft() != NULL){
+		while (!x->getLeft()->isSentinel()){
 			x = x->getLeft();
 		}
 
@@ -377,34 +379,20 @@ public:
 	}
 
 	CNode* treeMaximum (CNode* x) {
-		while (x->getRight() != NULL){
+		while (!x->getRight()->isSentinel()){
 			x = x->getRight();
 		}
 
 		return x;
 	}
 
-	CNode* treeSuccessor(CNode* x) {
-		if (x->getRight() != NULL)
-			return this->treeMinimum(x->getRight());
-
-		CNode* y = x->getParent();
-
-		while (y != NULL &&  x == y->getRight()) {
-			x = y;
-			y = y->getParent();
-		}
-
-		return y;
-	}
-
 	CNode* treePredecessor(CNode* x) {
-		if (x->getLeft() != NULL)
+		if (!x->getLeft()->isSentinel())
 			return this->treeMaximum(x->getLeft());
 
 		CNode* y = x->getParent();
 
-		while (y != NULL &&  x == y->getLeft()) {
+		while (!y->isSentinel() &&  x == y->getLeft()) {
 			x = y;
 			y = y->getParent();
 		}
@@ -416,7 +404,7 @@ public:
 		CNode *node_to_delete = m_root;
 		CNode *y = NULL, *x = NULL;
 
-		while (node_to_delete != NULL) {
+		while (!node_to_delete->isSentinel()) {
 			if (node_to_delete->getKey() == key)
 				break;
 
@@ -426,27 +414,22 @@ public:
 				node_to_delete = node_to_delete->getRight();
 		}
 
-		if (node_to_delete == NULL)
+		if (node_to_delete->isSentinel())
 			return false;
 
-		if (!node_to_delete->getLeft() || !node_to_delete->getRight()) {
+		if (node_to_delete->getLeft()->isSentinel() || node_to_delete->getRight()->isSentinel()) {
 			y = node_to_delete;
 		} else {
 			y = this->treePredecessor(node_to_delete);
 		}
 
-		if (y->getLeft() != NULL)
+		if (!y->getLeft()->isSentinel())
 			x = y->getLeft();
 		else
 			x = y->getRight();
 
-		if (x != NULL) {
-			x->setParent(y->getParent());
-		} else {
-			x = m_sentinel;
-			x->setParent(y->getParent());
-		}
-
+		x->setParent(y->getParent());
+		
 		if (y->getParent() == NULL)
 			this->m_root = x;
 		else if (y == y->getParent()->getLeft()) {
@@ -552,7 +535,7 @@ public:
 	CValue search(const CKey& key) const {
 		CNode* actual_node = m_root;
 
-		while (actual_node != NULL) {
+		while (!actual_node->isSentinel()) {
 			printf("%d%c\n", actual_node->getKey().m_key, actual_node->getColor());
 
 			if (actual_node->getKey() == key) {
@@ -567,7 +550,7 @@ public:
 		}
 
 
-		if (actual_node == NULL) {
+		if (actual_node->isSentinel()) {
 			throw NotFoundException();
 		} else {
 			return actual_node->getValue();
@@ -666,16 +649,17 @@ int main () {
 
 	std::cout << "del key11 = 90" << std::endl;
 	table->remove(key11);
-	//table->search(key11);
+	
 
 
 	std::cout << "del key2 = 85" << std::endl;
 	table->remove(key2);
-	//table->search(key2);
 
 	std::cout << "del key7 = 30" << std::endl;
 	table->remove(key7);
-	table->search(key7);
+	
+	//std::cout << "del search key3 = 15";
+	//table->search(key3);*/
 
 	return 0;
 }
