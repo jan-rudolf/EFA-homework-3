@@ -1,6 +1,6 @@
 #include <iostream>
 
-#if !__PROGTEST__
+#ifndef __PROGTEST__
 
 class NotFoundException {
 public:
@@ -9,8 +9,10 @@ public:
 };
 
 class CValue {
+	
+public:	
 	int m_value;
-public:   
+
 	CValue() {
 		m_value = 0;
 	} 
@@ -84,7 +86,6 @@ public:
     	return (i.m_key <= this->m_key);
     }
 };
-
 #endif
 
 class CNode {
@@ -131,6 +132,10 @@ public:
 
 	void setKey(const CKey &key) {
 		m_key = key;
+	}
+
+	void setValue(const CValue &value) {
+		m_value = value;
 	}
 
 	void setParent (CNode* parent) {
@@ -186,10 +191,22 @@ public:
 	}
 
 	CNode* getLeft() const {
+		if (m_left->isSentinel())
+			return NULL;
 		return m_left;
 	}
 
 	CNode* getRight() const {
+		if (m_right->isSentinel())
+			return NULL;
+		return m_right;
+	}
+
+	CNode* getLeftSentinel() const {
+		return m_left;
+	}
+
+	CNode* getRightSentinel() const {
 		return m_right;
 	}
 
@@ -203,16 +220,12 @@ public:
 };
 
 class CTable {
-	
-
 public:
 	CNode* m_root;
 
 	CTable() {
 		m_root = new CNode();
 		m_root->setSentinel();
-		//m_sentinel = new CNode();
-		//m_sentinel->setColorBlack();
 	}; 
 
 	~CTable() {
@@ -226,14 +239,16 @@ public:
 		while(!actual_node->isSentinel()) {
 			prev_node = actual_node;
 
-			std::cout << actual_node->getKey().m_key << std::endl;
+			if (actual_node->getKey() == key) {
+				actual_node->setValue(val);
+
+				return false;
+			}
 
 			if (actual_node->getKey() < key) {
-				actual_node = actual_node->getLeft();
-				//std::cout << "L" << std::endl;
+				actual_node = actual_node->getLeftSentinel();
 			} else {
-				actual_node = actual_node->getRight();
-				//std::cout << "R" << std::endl;
+				actual_node = actual_node->getRightSentinel();
 			}
 		}
 
@@ -242,24 +257,19 @@ public:
 
 		if (!prev_node) {
 			m_root = x;
-			//std::cout << "vytvarim root" << std::endl;
 		} else {
 			if (prev_node->getKey() < x->getKey()) {
 				prev_node->setLeftChild(x);
-
-				//std::cout << "vlozim do left" << std::endl;
 			} else {
 				prev_node->setRightChild(x);
-
-				//std::cout << "vlozim do right" << std::endl;
 			}
 		}
 
 		while (x->getParent() && x->getParent()->getParent()) {
-			if (x->getParent() == x->getParent()->getParent()->getLeft()) { //pokud je rodic levym potomkem sveho rodice
+			if (x->getParent() == x->getParent()->getParent()->getLeftSentinel()) { //pokud je rodic levym potomkem sveho rodice
 				CNode* parent = x->getParent();
 				CNode* grandparent = parent->getParent();
-				CNode* uncle = grandparent->getRight();
+				CNode* uncle = grandparent->getRightSentinel();
 
 				if (parent->getColor() == 'R' && grandparent->getColorRightChild() == 'R') {
 					parent->setColorBlack();
@@ -268,7 +278,7 @@ public:
 
 					x = grandparent;
 				} else if (parent->getColor() == 'R' && grandparent->getColorRightChild() == 'B') {
-					if (x == parent->getRight()) { //right rotation on parent
+					if (x == parent->getRightSentinel()) { //right rotation on parent
 						this->rotateLeft(parent, x);
 
 						x = parent;
@@ -283,10 +293,10 @@ public:
 				} else {
 					break;
 				}
-			} else if (x->getParent() == x->getParent()->getParent()->getRight()) { //pokud je rodic pravym potomkem sveho 
+			} else if (x->getParent() == x->getParent()->getParent()->getRightSentinel()) { //pokud je rodic pravym potomkem sveho 
 				CNode* parent = x->getParent();
 				CNode* grandparent = parent->getParent();
-				CNode* uncle = grandparent->getLeft();
+				CNode* uncle = grandparent->getLeftSentinel();
 
 				if (parent->getColor() == 'R' && grandparent->getColorLeftChild() == 'R') {
 					parent->setColorBlack();
@@ -295,7 +305,7 @@ public:
 
 					x = grandparent;
 				} else if (parent->getColor() == 'R' && grandparent->getColorLeftChild() == 'B') {
-					if (x == parent->getLeft()) { //right rotation on parent
+					if (x == parent->getLeftSentinel()) { //right rotation on parent
 						this->rotateRight(parent, x);
 
 						x = parent;
@@ -319,9 +329,8 @@ public:
 	}
 
 	void rotateRight (CNode* x, CNode* y) {
-		//printf("provadim R rotaci\n");
 		if (x->getParent()) {
-			if (x->getParent()->getRight() == x) {
+			if (x->getParent()->getRightSentinel() == x) {
 				x->getParent()->setRightChild(y); 
 			} else {
 				x->getParent()->setLeftChild(y); 
@@ -333,10 +342,10 @@ public:
 		y->setParent(x->getParent());
 		x->setParent(y);
 
-		x->setLeftChild(y->getRight());
+		x->setLeftChild(y->getRightSentinel());
 		
-		if (y->getRight()) {
-			y->getRight()->setParent(x);
+		if (y->getRightSentinel()) {
+			y->getRightSentinel()->setParent(x);
 		}
 
 		y->setRightChild(x);
@@ -345,9 +354,8 @@ public:
 	}
 
 	void rotateLeft (CNode* x, CNode* y) {
-		//printf("provadim L rotaci\n");
 		if (x->getParent()) {
-			if (x->getParent()->getRight() == x) {
+			if (x->getParent()->getRightSentinel() == x) {
 				x->getParent()->setRightChild(y); 
 			} else {
 				x->getParent()->setLeftChild(y); 
@@ -359,10 +367,10 @@ public:
 		y->setParent(x->getParent());
 		x->setParent(y);
 
-		x->setRightChild(y->getLeft());
+		x->setRightChild(y->getLeftSentinel());
 
-		if (y->getLeft()) {
-			y->getLeft()->setParent(x);
+		if (y->getLeftSentinel()) {
+			y->getLeftSentinel()->setParent(x);
 		}
 
 		y->setLeftChild(x);
@@ -370,17 +378,9 @@ public:
 		return;
 	}
 
-	CNode* treeMinimum (CNode* x) {
-		while (!x->getLeft()->isSentinel()){
-			x = x->getLeft();
-		}
-
-		return x;
-	}
-
 	CNode* treeMaximum (CNode* x) {
-		while (!x->getRight()->isSentinel()){
-			x = x->getRight();
+		while (!x->getRightSentinel()->isSentinel()){
+			x = x->getRightSentinel();
 		}
 
 		return x;
@@ -388,11 +388,11 @@ public:
 
 	CNode* treePredecessor(CNode* x) {
 		if (!x->getLeft()->isSentinel())
-			return this->treeMaximum(x->getLeft());
+			return this->treeMaximum(x->getLeftSentinel());
 
 		CNode* y = x->getParent();
 
-		while (!y->isSentinel() &&  x == y->getLeft()) {
+		while (!y->isSentinel() &&  x == y->getLeftSentinel()) {
 			x = y;
 			y = y->getParent();
 		}
@@ -409,30 +409,30 @@ public:
 				break;
 
 			if (node_to_delete->getKey() < key)
-				node_to_delete = node_to_delete->getLeft();
+				node_to_delete = node_to_delete->getLeftSentinel();
 			else
-				node_to_delete = node_to_delete->getRight();
+				node_to_delete = node_to_delete->getRightSentinel();
 		}
 
 		if (node_to_delete->isSentinel())
 			return false;
 
-		if (node_to_delete->getLeft()->isSentinel() || node_to_delete->getRight()->isSentinel()) {
+		if (node_to_delete->getLeftSentinel()->isSentinel() || node_to_delete->getRightSentinel()->isSentinel()) {
 			y = node_to_delete;
 		} else {
 			y = this->treePredecessor(node_to_delete);
 		}
 
-		if (!y->getLeft()->isSentinel())
-			x = y->getLeft();
+		if (!y->getLeftSentinel()->isSentinel())
+			x = y->getLeftSentinel();
 		else
-			x = y->getRight();
+			x = y->getRightSentinel();
 
 		x->setParent(y->getParent());
 		
 		if (y->getParent() == NULL)
 			this->m_root = x;
-		else if (y == y->getParent()->getLeft()) {
+		else if (y == y->getParent()->getLeftSentinel()) {
 			y->getParent()->setLeftChild(x);
 		} else {
 			y->getParent()->setRightChild(x);
@@ -440,7 +440,7 @@ public:
 
 		if (y != node_to_delete) {
 			node_to_delete->setKey(y->getKey());
-			// copy other satellite data
+			node_to_delete->setValue(y->getValue());
 		}
 
 		if (y->getColor() == 'B')
@@ -451,9 +451,9 @@ public:
 
 	void deleteFixUp(CNode* x) {
 		while (x != m_root && x->getColor() == 'B') {
-			if (x == x->getParent()->getLeft()) {
+			if (x == x->getParent()->getLeftSentinel()) {
 				/* x is left child of his parent */
-				CNode *w = x->getParent()->getRight(); //sibling of x;
+				CNode *w = x->getParent()->getRightSentinel(); //sibling of x;
 
 				if (w->getColor() == 'R') {
 					w->setColorBlack();
@@ -461,20 +461,20 @@ public:
 
 					this->rotateLeft(w->getParent(), w);
 
-					w = x->getParent()->getRight();
+					w = x->getParent()->getRightSentinel();
 				}
 
-				if (w->getLeft()->getColor() == 'B' &&  w->getRight()->getColor() == 'B') {
+				if (w->getLeftSentinel()->getColor() == 'B' &&  w->getRightSentinel()->getColor() == 'B') {
 					w->setColorRed();
 
 					x = x->getParent();
-				} else if (w->getRight()->getColor() == 'B') {
-					w->getLeft()->setColorBlack();
+				} else if (w->getRightSentinel()->getColor() == 'B') {
+					w->getLeftSentinel()->setColorBlack();
 					w->setColorRed();
 
-					this->rotateRight(w, w->getLeft());
+					this->rotateRight(w, w->getLeftSentinel());
 
-					w = x->getParent()->getRight();
+					w = x->getParent()->getRightSentinel();
 				} else {
 					if (x->getParent()->getColor() == 'B')
 						w->setColorBlack();
@@ -482,7 +482,7 @@ public:
 						w->setColorRed();
 
 					x->getParent()->setColorBlack();
-					w->getRight()->setColorBlack();
+					w->getRightSentinel()->setColorBlack();
 
 					this->rotateLeft(x->getParent(), w);
 
@@ -491,7 +491,7 @@ public:
 
 			} else {
 				/* x is right child of his parent */
-				CNode *w = x->getParent()->getLeft(); //sibling of x;
+				CNode *w = x->getParent()->getLeftSentinel(); //sibling of x;
 
 				if (w->getColor() == 'R') {
 					w->setColorBlack();
@@ -499,20 +499,20 @@ public:
 
 					this->rotateRight(w->getParent(), w);
 
-					w = x->getParent()->getLeft();
+					w = x->getParent()->getLeftSentinel();
 				}
 
-				if (w->getRight()->getColor() == 'B' &&  w->getLeft()->getColor() == 'B') {
+				if (w->getRightSentinel()->getColor() == 'B' &&  w->getLeftSentinel()->getColor() == 'B') {
 					w->setColorRed();
 
 					x = x->getParent();
-				} else if (w->getLeft()->getColor() == 'B') {
-					w->getRight()->setColorBlack();
+				} else if (w->getLeftSentinel()->getColor() == 'B') {
+					w->getRightSentinel()->setColorBlack();
 					w->setColorRed();
 
-					this->rotateLeft(w, w->getRight());
+					this->rotateLeft(w, w->getRightSentinel());
 
-					w = x->getParent()->getLeft();
+					w = x->getParent()->getLeftSentinel();
 				} else {
 					if (x->getParent()->getColor() == 'B')
 						w->setColorBlack();
@@ -520,7 +520,7 @@ public:
 						w->setColorRed();
 
 					x->getParent()->setColorBlack();
-					w->getLeft()->setColorBlack();
+					w->getLeftSentinel()->setColorBlack();
 
 					this->rotateRight(x->getParent(), w);
 
@@ -536,16 +536,14 @@ public:
 		CNode* actual_node = m_root;
 
 		while (!actual_node->isSentinel()) {
-			printf("%d%c\n", actual_node->getKey().m_key, actual_node->getColor());
-
 			if (actual_node->getKey() == key) {
 				break;
 			}
 
 			if (actual_node->getKey() < key) {
-				actual_node = actual_node->getLeft();
+				actual_node = actual_node->getLeftSentinel();
 			} else {
-				actual_node = actual_node->getRight();
+				actual_node = actual_node->getRightSentinel();
 			}
 		}
 
@@ -568,27 +566,37 @@ public:
 		return true;
 	}
 
-	CNode * getRoot() const {
+	CNode* getRoot() const {
+		if (m_root->isSentinel())
+			return NULL;
+
 		return m_root;
 	}
 };
 
+#ifndef __PROGTEST__
 int main () {
 
 	CKey key1(10), key2(85), key3(15), key4(70), key5(20), key6(60), key7(30), key8(50), key9(65), key10(80), key11(90), key12(40), key13(5), key14(55);
-	CValue value(10);
+	CValue value(10), value2(20);
 
 	CTable* table = new CTable();
+
+
 	std::cout << std::endl;
 	std::cout << "key1:" << std::endl;
+	std::cout << " insert:" << std::endl;
 	table->insert(key1, value);
-	table->search(key1);
-
+	std::cout << " search:" << std::endl;
+	
 	std::cout << std::endl;
 	std::cout << "key2:" << std::endl;
+	std::cout << " insert:" << std::endl;
 	table->insert(key2, value);
+	std::cout << " search:" << std::endl;
 	table->search(key2);
 
+	
 	std::cout << std::endl;
 	std::cout << "key3:" << std::endl;
 	table->insert(key3, value);
@@ -644,13 +652,12 @@ int main () {
 	std::cout << "key14:" << std::endl;
 	table->insert(key14, value);
 	table->search(key14);
-
-	std::cout << std::endl;
-
-	std::cout << "del key11 = 90" << std::endl;
-	table->remove(key11);
 	
 
+
+	
+	std::cout << "del key11 = 90" << std::endl;
+	table->remove(key11);
 
 	std::cout << "del key2 = 85" << std::endl;
 	table->remove(key2);
@@ -693,11 +700,13 @@ int main () {
 
 	std::cout << "del key8 = 50" << std::endl;
 	table->remove(key8);
-
+	
 
 	//pomoc pro lldb
-	table->remove(key4);
+	//table->remove(key4);
 
 
 	return 0;
 }
+#endif
+
