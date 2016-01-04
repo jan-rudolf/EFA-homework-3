@@ -177,6 +177,15 @@ public:
 		return m_left;
 	}  
 
+	CNode* getRight_remove() const {
+		
+		return m_right;
+	}
+
+	CNode* getLeft_remove() const {
+		return m_left;
+	}  
+
 	CNode* getRight() const {
 		return m_right;
 	}
