@@ -670,6 +670,12 @@ int main () {
 	std::cout << "del key9 = 65" << std::endl;
 	table->remove(key9);
 
+	std::cout << "del key10 = 80" << std::endl;
+	table->remove(key10);
+
+	std::cout << "del key10 = 80" << std::endl;
+	table->remove(key10);
+
 	//pomoc pro lldb
 	table->remove(key4);
 
