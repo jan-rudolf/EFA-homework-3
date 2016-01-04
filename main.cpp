@@ -686,7 +686,7 @@ int main () {
 	table->remove(key6);
 
 	//pomoc pro lldb
-	//table->remove(key4);
+	table->remove(key4);
 
 
 	return 0;
