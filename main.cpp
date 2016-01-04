@@ -658,8 +658,11 @@ int main () {
 	std::cout << "del key7 = 30" << std::endl;
 	table->remove(key7);
 	
-	//std::cout << "del search key3 = 15";
-	//table->search(key3);*/
+	std::cout << "del key5 = 20" << std::endl;
+	table->remove(key5);
+
+	std::cout << "del key4 = 70" << std::endl;
+	table->remove(key4);
 
 	return 0;
 }
